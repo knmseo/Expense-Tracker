@@ -2,48 +2,23 @@ import json
 
 import Utilities
 
-DummyValue = {
-    "amount": 0,
-    "category": "REMOVED",
-    "description": "None",
-}
-
 
 def main():
     PrevActionType = "None"
-    data = []
-    try:
-        with open("Saved/expenses.json", "r") as file:
-            data = json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        print("The JSON file is corrupted or doesn't exist?")
-        data = []
-
+    data = Utilities.LoadFile("Saved/expenses.json")
     ProgramRunning = True
 
     while ProgramRunning:
         RawUserInstruction = input("Enter the next action: ")
-        TempList = RawUserInstruction.split(" ", 1)
-        if len(TempList) == 1:
-            ActionType = TempList[0]
-            Instruction = "None"
-        elif len(TempList) == 2:
-            ActionType, Instruction = TempList
+        ActionType, Instruction = Utilities.SplitRawInput(RawUserInstruction)
 
-        if not ActionType in {"add", "remove", "list", "edit", "total"}:
+        if not ActionType in Utilities.ActionTypes:
             print("This is not a valid action!")
             continue
 
-        SaveCandidate = []
-        if PrevActionType == "remove" and ActionType != "remove":
-            PrevActionType = "None"
-            for i in range(len(data)):
-                if data[i]["category"] != "REMOVED":
-                    SaveCandidate.append(data[i])
-
-            data = SaveCandidate.copy()
-            with open("Saved/expenses.json", "w") as file:
-                json.dump(data, file)
+        PrevActionType, data = Utilities.CustomWriteJSON(
+            PrevActionType, ActionType, data, Path="Saved/expenses.json"
+        )
 
         if ActionType == "add":
             try:
@@ -62,7 +37,7 @@ def main():
                 print("Insufficient Arguments!")
         elif ActionType == "remove":
             try:
-                data[int(Instruction) - 1] = DummyValue.copy()
+                data[int(Instruction) - 1] = Utilities.DummyValue.copy()
                 PrevActionType = "remove"
                 print(f"Removed number {Instruction} from the list")
             except ValueError:
@@ -77,10 +52,12 @@ def main():
             try:
                 TargetNum, amount, category, description = Instruction.split(" ", 3)
                 try:
+                    TargetNum = int(TargetNum)
+                    TargetNum -= 1
                     print(
-                        f"Edited {data[int(TargetNum)-1]['amount']} >> {amount}, {data[int(TargetNum)-1]['category']} >> {category}, {data[int(TargetNum)-1]['description']} >> {description},"
+                        f"Edited {data[TargetNum]['amount']} >> {amount}, {data[TargetNum]['category']} >> {category}, {data[TargetNum]['description']} >> {description},"
                     )
-                    data[int(TargetNum) - 1] = {
+                    data[int(TargetNum)] = {
                         "amount": amount,
                         "category": category,
                         "description": description,
@@ -91,28 +68,11 @@ def main():
                     print("Invalid integer!")
             except ValueError:
                 print("Insufficient Arguments!")
+
         elif ActionType == "total":
-            if Instruction == "None":
-                print("count total ")
-                Sum = 0
-                for log in data:
-                    Sum += log["amount"]
-                print(f"The total is {Sum}!")
+            Utilities.CalcTotal(data, Instruction)
 
-            elif Instruction != "None":
-                print(f"count total for {Instruction}")
-                Sum = 0
-                for i in range(len(data)):
-                    amount, category, description = (
-                        data[i]["amount"],
-                        data[i]["category"],
-                        data[i]["description"],
-                    )
-                    if category == Instruction:
-                        Sum += amount
-                print(f"The total for {Instruction} is {Sum}!")
         Confirm = input("Do you have more to log?(y/n)")
-
         if Confirm == "y":
             ProgramRunning = True
         else:
