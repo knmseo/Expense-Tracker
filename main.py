@@ -3,80 +3,112 @@ import json
 import Utilities
 
 
-def main():
-    PrevActionType = "None"
-    data = Utilities.LoadFile("Saved/expenses.json")
-    ProgramRunning = True
+def add(data, instruction):
+    try:
+        amount, category, description = instruction.split(" ", 2)
 
-    while ProgramRunning:
-        RawUserInstruction = input("Enter the next action: ")
-        ActionType, Instruction = Utilities.SplitRawInput(RawUserInstruction)
-
-        if not ActionType in Utilities.ActionTypes:
-            print("This is not a valid action!")
-            continue
-
-        PrevActionType, data = Utilities.CustomWriteJSON(
-            PrevActionType, ActionType, data, Path="Saved/expenses.json"
-        )
-
-        if ActionType == "add":
-            try:
-                amount, category, description = Instruction.split(" ", 2)
-                try:
-                    NewVal = {
-                        "amount": int(amount),
-                        "category": category,
-                        "description": description,
-                    }
-                    data.append(NewVal)
-                    Utilities.printlist(data)
-                except ValueError:
-                    print("Invalid Integer!")
-            except ValueError:
-                print("Insufficient Arguments!")
-        elif ActionType == "remove":
-            try:
-                data[int(Instruction) - 1] = Utilities.DummyValue.copy()
-                PrevActionType = "remove"
-                print(f"Removed number {Instruction} from the list")
-            except ValueError:
-                print("Invalid Integer!")
-
-        elif ActionType == "list":
+        try:
+            new_val = {
+                "amount": int(amount),
+                "category": category,
+                "description": description,
+            }
+            data.append(new_val)
             Utilities.printlist(data)
+
+        except ValueError:
+            print("Invalid Integer!")
+
+    except ValueError:
+        print("Insufficient Arguments!")
+
+
+def remove(data, instruction):
+    try:
+        data[int(instruction) - 1] = Utilities.DummyValue.copy()
+        print(f"Removed number {instruction} from the list")
+
+    except ValueError:
+        print("Invalid Integer!")
+
+
+def list_expenses(data, instruction):
+    Utilities.printlist(data)
+
+    with open("Saved/expenses.json", "w") as file:
+        json.dump(data, file)
+
+
+def edit(data, instruction):
+    try:
+        target_num, amount, category, description = instruction.split(" ", 3)
+
+        try:
+            target_num = int(target_num) - 1
+
+            print(
+                f"Edited "
+                f"{data[target_num]['amount']} >> {amount}, "
+                f"{data[target_num]['category']} >> {category}, "
+                f"{data[target_num]['description']} >> {description}"
+            )
+
+            data[target_num] = {
+                "amount": amount,
+                "category": category,
+                "description": description,
+            }
+
             with open("Saved/expenses.json", "w") as file:
                 json.dump(data, file)
 
-        elif ActionType == "edit":
-            try:
-                TargetNum, amount, category, description = Instruction.split(" ", 3)
-                try:
-                    TargetNum = int(TargetNum)
-                    TargetNum -= 1
-                    print(
-                        f"Edited {data[TargetNum]['amount']} >> {amount}, {data[TargetNum]['category']} >> {category}, {data[TargetNum]['description']} >> {description},"
-                    )
-                    data[int(TargetNum)] = {
-                        "amount": amount,
-                        "category": category,
-                        "description": description,
-                    }
-                    with open("Saved/expenses.json", "w") as file:
-                        json.dump(data, file)
-                except ValueError:
-                    print("Invalid integer!")
-            except ValueError:
-                print("Insufficient Arguments!")
+        except ValueError:
+            print("Invalid integer!")
 
-        elif ActionType == "total":
-            Utilities.CalcTotal(data, Instruction)
+    except ValueError:
+        print("Insufficient Arguments!")
 
-        Confirm = input("Do you have more to log?(y/n)")
-        if Confirm == "y":
-            ProgramRunning = True
-        else:
-            ProgramRunning = False
+
+def total(data, instruction):
+    Utilities.CalcTotal(data, instruction)
+
+
+ACTIONS = {
+    "add": add,
+    "remove": remove,
+    "list": list_expenses,
+    "edit": edit,
+    "total": total,
+}
+
+
+def main():
+    prev_action_type = "None"
+    data = Utilities.LoadFile("Saved/expenses.json")
+    program_running = True
+
+    while program_running:
+        raw_user_instruction = input("Enter the next action: ")
+        action_type, instruction = Utilities.SplitRawInput(raw_user_instruction)
+
+        if action_type not in ACTIONS:
+            print("This is not a valid action!")
+            continue
+
+        prev_action_type, data = Utilities.CustomWriteJSON(
+            prev_action_type,
+            action_type,
+            data,
+            Path="Saved/expenses.json",
+        )
+
+        ACTIONS[action_type](data, instruction)
+
+        if action_type == "remove":
+            prev_action_type = "remove"
+
+        confirm = input("Do you have more to log?(y/n)")
+        program_running = confirm == "y"
 
 
 if __name__ == "__main__":
