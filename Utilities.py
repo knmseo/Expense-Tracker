@@ -6,10 +6,8 @@ DummyValue = {
     "description": "None",
 }
 
-ActionTypes = {"add", "remove", "list", "edit", "total"}
 
-
-def printlist(data):
+def PrintList(data):
     index = 1
     for i in range(len(data)):
         category = data[i]["category"]
@@ -35,6 +33,7 @@ def LoadFile(Path):
 def SplitRawInput(RawInput):
     TempList = RawInput.split(" ", 1)
     if len(TempList) == 1:
+        print("debug_SplitRawInput")
         ActionType = TempList[0]
         Instruction = "None"
     elif len(TempList) == 2:

@@ -1,1 +1,1 @@
-[{"amount": 60, "category": "groceries", "description": "weekly groceries"}, {"amount": 250, "category": "transport", "description": "airplane"}]
+[{"amount": "20", "category": "groceries", "description": "weekly groceries"}, {"amount": 250, "category": "transport", "description": "airplane"}, {"amount": 20, "category": "transport", "description": "taxi"}]
