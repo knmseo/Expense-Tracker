@@ -55,21 +55,3 @@ def CustomWriteJSON(PrevActionType, ActionType, data, Path):
             json.dump(data, file)
 
     return PrevActionType, data
-
-
-def CalcTotal(data, Instruction):
-    if Instruction == "None":
-        Sum = 0
-        for log in data:
-            Sum += log["amount"]
-        print(f"The total is {Sum}!")
-
-    elif Instruction != "None":
-        Sum = 0
-        for i in range(len(data)):
-            amount, category = (data[i]["amount"], data[i]["category"])
-            if category == Instruction:
-                Sum += amount
-        if Sum == 0:
-            print("Invalid Category!")
-        print(f"The total for {Instruction} is {Sum}!")
